@@ -6,8 +6,10 @@ import (
 	"net"
 	"os"
 	"strings"
+	"time"
 
 	dnstap "github.com/dnstap/golang-dnstap"
+	"github.com/factorysh/on-his-name/output"
 )
 
 var logger = log.New(os.Stderr, "", log.LstdFlags)
@@ -19,20 +21,28 @@ func main() {
 		listen = "localhost:4807"
 	}
 
+	o := output.New()
+	go o.RunOutputLoop()
 	if strings.HasPrefix(listen, "/") || strings.HasPrefix(listen, "./") {
 		i, err := dnstap.NewFrameStreamSockInputFromPath(listen)
 		if err != nil {
 			fmt.Fprintf(os.Stderr, "dnstap: Failed to open input socket %s: %v\n", listen, err)
 			os.Exit(1)
 		}
+		i.SetTimeout(10 * time.Second)
 		i.SetLogger(logger)
+		fmt.Println("Listening UNIX", listen)
+		i.ReadInto(o.GetOutputChannel())
 	} else {
 		l, err := net.Listen("tcp", listen)
 		if err != nil {
 			panic(err)
 		}
+		fmt.Println("Listening", listen)
 		i := dnstap.NewFrameStreamSockInput(l)
-		//i.SetTimeout(*flagTimeout)
+		i.SetTimeout(10 * time.Second)
 		i.SetLogger(logger)
+		i.ReadInto(o.GetOutputChannel())
 	}
+
 }

@@ -3,3 +3,6 @@ build: bin
 
 bin:
 	mkdir -p bin
+
+dig:
+	dig @localhost -p 1053 CH version.bind TXT
