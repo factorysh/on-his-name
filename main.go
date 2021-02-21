@@ -21,7 +21,7 @@ func main() {
 		listen = "localhost:4807"
 	}
 
-	o := output.New()
+	o := output.New(logger)
 	go o.RunOutputLoop()
 	if strings.HasPrefix(listen, "/") || strings.HasPrefix(listen, "./") {
 		i, err := dnstap.NewFrameStreamSockInputFromPath(listen)

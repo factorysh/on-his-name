@@ -11,31 +11,32 @@ import (
 
 type Output struct {
 	output chan []byte
-	log    log.Logger
+	log    *log.Logger
 }
 
-func New() *Output {
+func New(l *log.Logger) *Output {
 	return &Output{
 		output: make(chan []byte),
+		log:    l,
 	}
 }
 
 func (o *Output) GetOutputChannel() chan []byte {
 	return o.output
 }
+
 func (o *Output) RunOutputLoop() {
 	dt := &dnstap.Dnstap{}
-	fmt.Println("ma loop")
 	for frame := range o.output {
 		if err := proto.Unmarshal(frame, dt); err != nil {
 			o.log.Print(err)
 			break
 		}
+		fmt.Println("Type", dt.Type)
 		spew.Dump(dt)
 	}
-
 }
+
 func (o *Output) Close() {
-	fmt.Println("bim, on coupe")
 
 }
