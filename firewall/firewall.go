@@ -4,29 +4,22 @@ import (
 	"context"
 	"fmt"
 	"net"
-	"regexp"
+	"path"
 
 	_dns "github.com/factorysh/on-his-name/dns"
 )
 
 type Firewall struct {
 	names    chan *_dns.ResolvedName
-	matcher  []*regexp.Regexp
+	matcher  []string
 	accepted map[string]interface{}
 }
 
-func New(regex ...string) (*Firewall, error) {
+func New(matches ...string) (*Firewall, error) {
 	f := &Firewall{
 		names:    make(chan *_dns.ResolvedName),
-		matcher:  make([]*regexp.Regexp, len(regex)),
+		matcher:  matches,
 		accepted: make(map[string]interface{}),
-	}
-	for i, r := range regex {
-		rr, err := regexp.CompilePOSIX(r)
-		if err != nil {
-			return nil, err
-		}
-		f.matcher[i] = rr
 	}
 	return f, nil
 }
@@ -52,7 +45,12 @@ func (f *Firewall) Filter(name string, ip net.IP) bool {
 		return true
 	}
 	for _, r := range f.matcher {
-		if r.Match([]byte(name)) {
+		ok, err := path.Match(r, name)
+		if err != nil {
+			fmt.Println("Match error ", err)
+			continue
+		}
+		if ok {
 			f.Add(ip)
 			f.accepted[ip.String()] = name
 			fmt.Println("Do", name)
