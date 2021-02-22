@@ -3,5 +3,5 @@
     log
     errors
     cache
-    dnstap ./tap.sock
+    dnstap ./tap.sock full
 }
