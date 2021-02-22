@@ -9,6 +9,7 @@ import (
 	"time"
 
 	dnstap "github.com/dnstap/golang-dnstap"
+	_dns "github.com/factorysh/on-his-name/dns"
 	"github.com/factorysh/on-his-name/output"
 )
 
@@ -21,7 +22,7 @@ func main() {
 		listen = "localhost:4807"
 	}
 
-	resolved := make(chan *output.ResolvedName)
+	resolved := make(chan *_dns.ResolvedName)
 
 	o := output.New(logger, resolved)
 	go func() {

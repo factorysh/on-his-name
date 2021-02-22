@@ -3,26 +3,21 @@ package output
 import (
 	"fmt"
 	"log"
-	"net"
 
 	dnstap "github.com/dnstap/golang-dnstap"
+	_dns "github.com/factorysh/on-his-name/dns"
 	"github.com/miekg/dns"
 	"google.golang.org/protobuf/proto"
 )
-
-type ResolvedName struct {
-	Cname string
-	A     net.IP
-}
 
 type Output struct {
 	output   chan []byte
 	log      *log.Logger
 	done     chan struct{}
-	resolved chan *ResolvedName
+	resolved chan *_dns.ResolvedName
 }
 
-func New(l *log.Logger, resolved chan *ResolvedName) *Output {
+func New(l *log.Logger, resolved chan *_dns.ResolvedName) *Output {
 	return &Output{
 		output:   make(chan []byte, 32),
 		log:      l,
@@ -63,7 +58,7 @@ func (o *Output) RunOutputLoop() {
 				o.log.Print(err)
 				break
 			}
-			rn := &ResolvedName{}
+			rn := &_dns.ResolvedName{}
 			for _, r := range msg.Answer {
 				fmt.Println("Response", r.Header().Name,
 					dns.Class(r.Header().Class), dns.Type(r.Header().Rrtype),
