@@ -21,7 +21,15 @@ func main() {
 		listen = "localhost:4807"
 	}
 
-	o := output.New(logger)
+	resolved := make(chan *output.ResolvedName)
+
+	o := output.New(logger, resolved)
+	go func() {
+		for {
+			r := <-resolved
+			fmt.Println("Patch your firewall with", r.Cname, r.A)
+		}
+	}()
 	go o.RunOutputLoop()
 	if strings.HasPrefix(listen, "/") || strings.HasPrefix(listen, "./") {
 		i, err := dnstap.NewFrameStreamSockInputFromPath(listen)
