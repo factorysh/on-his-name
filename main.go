@@ -1,6 +1,7 @@
 package main
 
 import (
+	"context"
 	"fmt"
 	"log"
 	"net"
@@ -10,6 +11,7 @@ import (
 
 	dnstap "github.com/dnstap/golang-dnstap"
 	_dns "github.com/factorysh/on-his-name/dns"
+	"github.com/factorysh/on-his-name/firewall"
 	"github.com/factorysh/on-his-name/output"
 )
 
@@ -22,9 +24,14 @@ func main() {
 		listen = "localhost:4807"
 	}
 
+	fw, err := firewall.New(os.Args[1:]...)
+	if err != nil {
+		panic(err)
+	}
 	resolved := make(chan *_dns.ResolvedName)
 
-	o := output.New(logger, resolved)
+	go fw.Start(context.Background())
+	o := output.New(logger, fw.Channel())
 	go func() {
 		for {
 			r := <-resolved
