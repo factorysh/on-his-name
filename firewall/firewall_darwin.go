@@ -5,6 +5,7 @@ import (
 	"net"
 )
 
-func (f *Firewall) Add(ip net.IP) {
+func (f *Firewall) Deny(ip net.IP) error {
 	fmt.Println(ip)
+	return nil
 }
