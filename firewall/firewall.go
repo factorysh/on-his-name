@@ -80,7 +80,11 @@ func (f *Firewall) Filter(name string, ip net.IP) bool {
 			continue
 		}
 		if ok {
-			f.Add(ip)
+			err := f.Deny(ip)
+			if err != nil {
+				// TODO: better error handling, just log for now
+				fmt.Println(err)
+			}
 			f.accepted[ip.String()] = name
 			ipsLen.Set(float64(len(f.accepted)))
 			opsAccepted.Inc()
