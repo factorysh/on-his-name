@@ -77,6 +77,7 @@ func (o *Output) RunOutputLoop() {
 						rn.A = rr.A
 					}
 				}
+				rn.Cname = r.Header().Name
 			}
 			o.resolved <- rn
 		}
