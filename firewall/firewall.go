@@ -58,7 +58,9 @@ func (f *Firewall) Start(ctx context.Context) {
 	for {
 		select {
 		case name := <-f.names:
-			f.Filter(name.Cname, name.A)
+			if name.A != nil {
+				f.Filter(name.Cname, name.A)
+			}
 		case <-ctx.Done():
 			break
 		}
