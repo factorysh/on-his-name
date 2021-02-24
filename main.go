@@ -26,7 +26,12 @@ func main() {
 		listen = "localhost:4807"
 	}
 
-	fw, err := firewall.New(os.Args[1:]...)
+	br := os.Getenv("DOCKER_BRIDGE_NAME")
+	if br == "" {
+		panic("DOCKER_BRIDGE_NAME env var is required")
+	}
+
+	fw, err := firewall.New(br, os.Args[1:]...)
 	if err != nil {
 		panic(err)
 	}

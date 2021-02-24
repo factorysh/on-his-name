@@ -37,13 +37,15 @@ type Firewall struct {
 	names    chan *_dns.ResolvedName
 	matcher  []string
 	accepted map[string]interface{}
+	br       string
 }
 
-func New(matches ...string) (*Firewall, error) {
+func New(br string, matches ...string) (*Firewall, error) {
 	f := &Firewall{
 		names:    make(chan *_dns.ResolvedName),
 		matcher:  matches,
 		accepted: make(map[string]interface{}),
+		br:       br,
 	}
 	return f, nil
 }
