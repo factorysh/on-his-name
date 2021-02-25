@@ -99,8 +99,8 @@ func (f *Firewall) Setup() (err error) {
 	defaults := []Rule{
 		{raw: "-m conntrack --ctstate ESTABLISHED -j ACCEPT", append: true},
 		{raw: "-j DROP", append: true},
-		{raw: "-o docker0 -p tcp --dport 53 -j ACCEPT", append: false},
-		{raw: "-o docker0 -p udp --dport 53 -j ACCEPT", append: false},
+		{raw: fmt.Sprintf("-o %s -p tcp --dport 53 -j ACCEPT", f.bridge), append: false},
+		{raw: fmt.Sprintf("-o %s -p udp --dport 53 -j ACCEPT", f.bridge), append: false},
 	}
 
 	for _, rule := range defaults {
