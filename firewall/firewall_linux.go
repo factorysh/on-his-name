@@ -8,7 +8,7 @@ import (
 	iptbl "github.com/coreos/go-iptables/iptables"
 )
 
-func (f *Firewall) Deny(ip net.IP) error {
+func (f *Firewall) Allow(ip net.IP) error {
 	ipt, err := iptbl.New(iptbl.IPFamily(iptbl.ProtocolIPv4), iptables.Timeout(0))
 	if err != nil {
 		return err
