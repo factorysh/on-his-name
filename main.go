@@ -68,6 +68,11 @@ func main() {
 
 	resolved := make(chan *_dns.ResolvedName)
 
+	err = fw.Setup()
+	if err != nil {
+		panic(err)
+	}
+
 	go fw.Start(context.Background())
 	o := output.New(logger, fw.Channel())
 	go func() {

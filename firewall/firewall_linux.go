@@ -3,20 +3,21 @@ package firewall
 import (
 	"fmt"
 	"net"
-
-	"github.com/coreos/go-iptables/iptables"
-	iptbl "github.com/coreos/go-iptables/iptables"
 )
 
 func (f *Firewall) Allow(ip net.IP) error {
-	ipt, err := iptbl.New(iptbl.IPFamily(iptbl.ProtocolIPv4), iptables.Timeout(0))
-	if err != nil {
-		return err
+	allowHTTP := []Rule{
+		{raw: fmt.Sprintf("-p tcp --dport 80 -d %s -j ACCEPT", ip.String()), append: false},
+		{raw: fmt.Sprintf("-p tcp --dport 443 -d %s -j ACCEPT", ip.String()), append: false},
 	}
 
-	ok, err := ipt.ChainExists("filter", "DOCKER-USER")
+	for _, rule := range allowHTTP {
+		err := rule.Apply(f.ipt)
+		if err != nil {
+			return err
+		}
+	}
 
-	fmt.Println("debug", ok, err)
+	return nil
 
-	return err
 }
