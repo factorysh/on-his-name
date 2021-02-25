@@ -7,6 +7,7 @@ import (
 	"net"
 	"net/http"
 	"os"
+	"strconv"
 	"strings"
 	"time"
 
@@ -24,6 +25,16 @@ func main() {
 	listen := os.Getenv("LISTEN")
 	if listen == "" {
 		listen = "localhost:4807"
+	}
+
+	rawSid := os.Getenv("SOCKET_UID")
+	if rawSid == "" {
+		panic("SOCKET_UID env var is required")
+	}
+
+	sid, err := strconv.Atoi(rawSid)
+	if err != nil {
+		panic(fmt.Errorf("Parsing SOCKET_UID failed %v is not an integer", rawSid))
 	}
 
 	br := os.Getenv("DOCKER_BRIDGE_NAME")
@@ -71,6 +82,10 @@ func main() {
 		if err != nil {
 			fmt.Fprintf(os.Stderr, "dnstap: Failed to open input socket %s: %v\n", listen, err)
 			os.Exit(1)
+		}
+		err = os.Chown(listen, sid, sid)
+		if err != nil {
+			panic(err)
 		}
 		i.SetTimeout(10 * time.Second)
 		i.SetLogger(logger)
