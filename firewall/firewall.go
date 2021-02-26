@@ -2,9 +2,12 @@ package firewall
 
 import (
 	"context"
+	"encoding/json"
 	"fmt"
 	"net"
+	"net/http"
 	"path"
+	"sort"
 
 	_dns "github.com/factorysh/on-his-name/dns"
 )
@@ -59,4 +62,22 @@ func (f *Firewall) Filter(name string, ip net.IP) bool {
 	}
 	fmt.Println("Ban", name)
 	return false
+}
+
+func (f *Firewall) RegisterHTTP(mux *http.ServeMux) {
+	mux.HandleFunc("/api/matchers", func(w http.ResponseWriter, r *http.Request) {
+		w.Header().Set("Content-Type", "application/json")
+		json.NewEncoder(w).Encode(f.matcher)
+	})
+	mux.HandleFunc("/api/accepted", func(w http.ResponseWriter, r *http.Request) {
+		w.Header().Set("Content-Type", "application/json")
+		ips := make([]string, len(f.accepted))
+		i := 0
+		for k, _ := range f.accepted {
+			ips[i] = k
+			i++
+		}
+		sort.Sort(sort.StringSlice(ips))
+		json.NewEncoder(w).Encode(ips)
+	})
 }

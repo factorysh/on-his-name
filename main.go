@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"log"
 	"net"
+	"net/http"
 	"os"
 	"strings"
 	"time"
@@ -28,6 +29,25 @@ func main() {
 	if err != nil {
 		panic(err)
 	}
+
+	adminListen := os.Getenv("ADMIN_LISTEN")
+	if adminListen != "" {
+		mux := http.NewServeMux()
+		mux.HandleFunc("/", func(w http.ResponseWriter, r *http.Request) {
+			w.Header().Set("Content-Type", "plain/text")
+			w.Write([]byte(`
+              _     _
+ ___  _ __   | |__ (_)___   _ __   __ _ _ __ ___   ___
+/ _ \| '_ \  | '_ \| / __| | '_ \ / _' | '_ ' _ \ / _ \
+| (_) | | | | | | | | \__ \ | | | | (_| | | | | | |  __/
+\___/|_| |_| |_| |_|_|___/ |_| |_|\__,_|_| |_| |_|\___|
+`))
+		})
+		fw.RegisterHTTP(mux)
+		fmt.Println("Admin http server", adminListen)
+		go http.ListenAndServe(adminListen, mux)
+	}
+
 	resolved := make(chan *_dns.ResolvedName)
 
 	go fw.Start(context.Background())
