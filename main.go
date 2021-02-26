@@ -14,6 +14,7 @@ import (
 	_dns "github.com/factorysh/on-his-name/dns"
 	"github.com/factorysh/on-his-name/firewall"
 	"github.com/factorysh/on-his-name/output"
+	"github.com/prometheus/client_golang/prometheus/promhttp"
 )
 
 var logger = log.New(os.Stderr, "", log.LstdFlags)
@@ -44,6 +45,7 @@ func main() {
 `))
 		})
 		fw.RegisterHTTP(mux)
+		mux.Handle("/metrics", promhttp.Handler())
 		fmt.Println("Admin http server", adminListen)
 		go http.ListenAndServe(adminListen, mux)
 	}

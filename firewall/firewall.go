@@ -10,6 +10,27 @@ import (
 	"sort"
 
 	_dns "github.com/factorysh/on-his-name/dns"
+	"github.com/prometheus/client_golang/prometheus"
+	"github.com/prometheus/client_golang/prometheus/promauto"
+)
+
+var (
+	opsCached = promauto.NewCounter(prometheus.CounterOpts{
+		Name: "onhisname_cached_total",
+		Help: "The total number of cached requests",
+	})
+	opsRejected = promauto.NewCounter(prometheus.CounterOpts{
+		Name: "onhisname_rejected_total",
+		Help: "The total number of rejected requests",
+	})
+	opsAccepted = promauto.NewCounter(prometheus.CounterOpts{
+		Name: "onhisname_accepted_total",
+		Help: "The total number of accepted requests",
+	})
+	ipsLen = promauto.NewGauge(prometheus.GaugeOpts{
+		Name: "onhisname_ips",
+		Help: "The current number of accepted IPs",
+	})
 )
 
 type Firewall struct {
@@ -45,6 +66,7 @@ func (f *Firewall) Start(ctx context.Context) {
 func (f *Firewall) Filter(name string, ip net.IP) bool {
 	if _, ok := f.accepted[ip.String()]; ok {
 		fmt.Println("Already done", name)
+		opsCached.Inc()
 		return true
 	}
 	for _, r := range f.matcher {
@@ -56,10 +78,13 @@ func (f *Firewall) Filter(name string, ip net.IP) bool {
 		if ok {
 			f.Add(ip)
 			f.accepted[ip.String()] = name
+			ipsLen.Set(float64(len(f.accepted)))
+			opsAccepted.Inc()
 			fmt.Println("Do", name)
 			return true
 		}
 	}
+	opsRejected.Inc()
 	fmt.Println("Ban", name)
 	return false
 }
