@@ -3,7 +3,7 @@ module github.com/factorysh/on-his-name
 go 1.15
 
 require (
-	github.com/coreos/go-iptables v0.5.0 // indirect
+	github.com/coreos/go-iptables v0.5.0
 	github.com/dnstap/golang-dnstap v0.4.0
 	github.com/miekg/dns v1.1.38
 	github.com/prometheus/client_golang v1.9.0
