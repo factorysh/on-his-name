@@ -1,10 +1,23 @@
 package firewall
 
-/*
-* See https://github.com/coreos/go-iptables
- */
+import (
+	"fmt"
+	"net"
+)
 
-import "net"
+func (f *Firewall) Allow(ip net.IP) error {
+	allowHTTP := []Rule{
+		{raw: fmt.Sprintf("-p tcp --dport 80 -d %s -j ACCEPT", ip.String()), append: false},
+		{raw: fmt.Sprintf("-p tcp --dport 443 -d %s -j ACCEPT", ip.String()), append: false},
+	}
 
-func (f *Firewall) Add(ip net.IP) {
+	for _, rule := range allowHTTP {
+		err := rule.Apply(f.ipt)
+		if err != nil {
+			return err
+		}
+	}
+
+	return nil
+
 }

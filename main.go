@@ -7,6 +7,7 @@ import (
 	"net"
 	"net/http"
 	"os"
+	"strconv"
 	"strings"
 	"time"
 
@@ -26,7 +27,22 @@ func main() {
 		listen = "localhost:4807"
 	}
 
-	fw, err := firewall.New(os.Args[1:]...)
+	rawSid := os.Getenv("SOCKET_UID")
+	if rawSid == "" {
+		panic("SOCKET_UID env var is required")
+	}
+
+	sid, err := strconv.Atoi(rawSid)
+	if err != nil {
+		panic(fmt.Errorf("Parsing SOCKET_UID failed %v is not an integer", rawSid))
+	}
+
+	br := os.Getenv("DOCKER_BRIDGE_NAME")
+	if br == "" {
+		panic("DOCKER_BRIDGE_NAME env var is required")
+	}
+
+	fw, err := firewall.New(br, os.Args[1:]...)
 	if err != nil {
 		panic(err)
 	}
@@ -52,6 +68,11 @@ func main() {
 
 	resolved := make(chan *_dns.ResolvedName)
 
+	err = fw.Setup()
+	if err != nil {
+		panic(err)
+	}
+
 	go fw.Start(context.Background())
 	o := output.New(logger, fw.Channel())
 	go func() {
@@ -66,6 +87,10 @@ func main() {
 		if err != nil {
 			fmt.Fprintf(os.Stderr, "dnstap: Failed to open input socket %s: %v\n", listen, err)
 			os.Exit(1)
+		}
+		err = os.Chown(listen, sid, sid)
+		if err != nil {
+			panic(err)
 		}
 		i.SetTimeout(10 * time.Second)
 		i.SetLogger(logger)
