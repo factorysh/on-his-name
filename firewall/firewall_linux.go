@@ -7,8 +7,8 @@ import (
 
 func (f *Firewall) Allow(ip net.IP) error {
 	allowHTTP := []Rule{
-		{raw: fmt.Sprintf("-p tcp --dport 80 -d %s -j ACCEPT", ip.String()), append: false},
-		{raw: fmt.Sprintf("-p tcp --dport 443 -d %s -j ACCEPT", ip.String()), append: false},
+		{raw: fmt.Sprintf("-p tcp -i %s --dport 80 -d %s -j ACCEPT", f.outInterface, ip.String()), append: false},
+		{raw: fmt.Sprintf("-p tcp -i %s --dport 443 -d %s -j ACCEPT", f.outInterface, ip.String()), append: false},
 	}
 
 	for _, rule := range allowHTTP {

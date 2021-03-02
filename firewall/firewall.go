@@ -11,6 +11,9 @@ import (
 	"strings"
 
 	iptbl "github.com/coreos/go-iptables/iptables"
+	"github.com/docker/docker/api/types"
+	"github.com/docker/docker/api/types/filters"
+	"github.com/docker/docker/client"
 	_dns "github.com/factorysh/on-his-name/dns"
 	"github.com/prometheus/client_golang/prometheus"
 	"github.com/prometheus/client_golang/prometheus/promauto"
@@ -64,12 +67,17 @@ type Firewall struct {
 }
 
 func New(br string, matches ...string) (*Firewall, error) {
+	outBr, err := getBridgeHostName(br)
+	if err != nil {
+		return nil, err
+	}
+
 	f := &Firewall{
 		names:        make(chan *_dns.ResolvedName),
 		matcher:      matches,
 		accepted:     make(map[string]interface{}),
 		bridge:       br,
-		outInterface: "docker0",
+		outInterface: outBr,
 	}
 	return f, nil
 }
@@ -98,7 +106,7 @@ func (f *Firewall) Setup() (err error) {
 	// close the rest
 	defaults := []Rule{
 		{raw: "-m conntrack --ctstate ESTABLISHED -j ACCEPT", append: true},
-		{raw: "-j DROP", append: true},
+		{raw: fmt.Sprintf("-i %s -j DROP", f.outInterface), append: true},
 		{raw: fmt.Sprintf("-o %s -p tcp --dport 53 -j ACCEPT", f.bridge), append: false},
 		{raw: fmt.Sprintf("-o %s -p udp --dport 53 -j ACCEPT", f.bridge), append: false},
 	}
@@ -172,4 +180,32 @@ func (f *Firewall) RegisterHTTP(mux *http.ServeMux) {
 		sort.Sort(sort.StringSlice(ips))
 		json.NewEncoder(w).Encode(ips)
 	})
+}
+
+// getBridgeHostName takes a bridge name as listed in docker daemon and returns
+// real bridge name from the host
+func getBridgeHostName(br string) (string, error) {
+	ctx := context.TODO()
+	cli, err := client.NewClientWithOpts(client.FromEnv, client.WithAPIVersionNegotiation())
+	if err != nil {
+		return "", err
+	}
+
+	networks, err := cli.NetworkList(ctx, types.NetworkListOptions{Filters: filters.NewArgs(filters.KeyValuePair{Key: "name", Value: br})})
+	if len(networks) == 0 {
+		return "", fmt.Errorf("No bridge with name %s found in docker daemon", br)
+	}
+
+	interfaces, err := net.Interfaces()
+	if err != nil {
+		return "", err
+	}
+
+	for _, i := range interfaces {
+		if len(i.Name) >= 3 && strings.HasPrefix(networks[0].ID, i.Name[3:]) {
+			return i.Name, err
+		}
+	}
+
+	return "", fmt.Errorf("No associate interface found for docker bridge %s", br)
 }
