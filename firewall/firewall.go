@@ -105,10 +105,7 @@ func (f *Firewall) Setup() (err error) {
 	// open port 53, tcp, udp
 	// close the rest
 	defaults := []Rule{
-		{raw: "-m conntrack --ctstate ESTABLISHED -j ACCEPT", append: true},
 		{raw: fmt.Sprintf("-i %s -j DROP", f.outInterface), append: true},
-		{raw: fmt.Sprintf("-o %s -p tcp --dport 53 -j ACCEPT", f.outInterface), append: false},
-		{raw: fmt.Sprintf("-o %s -p udp --dport 53 -j ACCEPT", f.outInterface), append: false},
 	}
 
 	for _, rule := range defaults {
