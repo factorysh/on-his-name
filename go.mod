@@ -3,8 +3,7 @@ module github.com/factorysh/on-his-name
 go 1.16
 
 require (
-	github.com/Microsoft/go-winio v0.5.1 // indirect
-	github.com/containerd/containerd v1.5.9 // indirect
+	github.com/containerd/containerd v1.5.18 // indirect
 	github.com/coreos/go-iptables v0.6.0
 	github.com/dnstap/golang-dnstap v0.4.0
 	github.com/docker/docker v20.10.12+incompatible
